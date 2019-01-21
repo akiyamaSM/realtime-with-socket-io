@@ -3,7 +3,7 @@ var app = express() // get the app instance
 var server = require('http').Server(app) // server using http
 var io = require('socket.io')(server) // socketio using the server instance
 
-//app.use(express.static('/public'));
+app.use(express.static('public'));
 
 
 app.get('/home', function (request, response) {
@@ -11,7 +11,13 @@ app.get('/home', function (request, response) {
 })
 
 io.on('connection', function (socket) {
-    console.log('connected')
+	socket.on('connected', (name) => {
+		socket.broadcast.emit('connected', name)
+	})
+
+	socket.on('send', (newMessage) => {
+		socket.broadcast.emit('send', newMessage)
+	})
 })
 
 server.listen(8080, function () {

@@ -4,22 +4,94 @@
 	<title>Test</title>
 	<script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/2.2.0/socket.io.js"></script>
 	<script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/vue/2.5.22/vue.js"></script>
+<link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.2.1/css/bootstrap.min.css" integrity="sha384-GJzZqFGwb1QTTN6wy59ffF1BuGJpLSa9DkKMp0DgiMDm4iYMj70gZWKYbI706tWS" crossorigin="anonymous">
+	<link href="chat.css" rel="stylesheet">
 </head>
 <body>
-
 	<div id="app">
-		
+		<div class="info" v-if="connected === false">
+		  <div class="form-group mx-sm-3 mb-2 row">
+		    <input type="text" class="form-control col-md-10" placeholder="name" v-model="name">
+		  	<button type="submit" class="btn btn-primary mb-2" @click.prevent="connect">Confirm</button>
+		  </div>
+		</div>
+		<div class="card chat" v-else>
+			<ul>
+				<li v-for="notification in notifications"> 
+					<span>{{ notification.name }} just {{ notification.action }} the conversation</span>
+				</li>
+			</ul>
+		  <h5 class="card-header">My Chat</h5>
+		  <div class="card-body">
+		  	<ul>
+		  		<li v-for="message in messages">
+		  			<span :class="{ 'float-right' : message.sent == 1 }">{{ message.content}}</span>
+		  		</li>
+		  	</ul>
+		  	<form @submit.prevent="send">
+			  	<input type="text" v-model="newContent" @keypress="isTyping">
+		  	</form>
+		  </div>
+		</div>
 	</div>
-
 
 	<script type="text/javascript">
 		
 		var io = io();
 
 		var app = new Vue({
-			app: '#app',
+			el: '#app',
+			data:{
+				messages: [],
+				name: '',
+				connected: false,
+				notifications: [],
+				newContent: ''
+			},
 			created(){
-				console.log('entred')
+				io.on('connected', (name) => {
+					this.notifications.push({
+						name,
+						action: 'joined'
+					})
+					this.cleanNotifications()
+					
+				})
+
+				io.on('send', (newMessage) => {
+					this.messages.push({
+						content : newMessage.content,
+						sent : 0
+					})
+				})
+			},
+			methods: {
+
+				send(){
+					this.messages.push({
+						content : this.newContent,
+						sent : 1
+					})
+
+					io.emit('send',{
+						content: this.newContent,
+					})
+
+					this.newContent = ''
+				},
+				isTyping(){
+					console.log('Is Typing')
+				},
+				cleanNotifications(){
+					setTimeout(() => {
+						this.notifications = []
+					}, 3000)
+				},
+				connect(){
+					this.connected = true
+
+					io.emit('connected',this.name)
+				}
 			}
 		})
 
