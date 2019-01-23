@@ -9,32 +9,53 @@
 </head>
 <body>
 	<div id="app">
+
 		<div class="info" v-if="connected === false">
 		  <div class="form-group mx-sm-3 mb-2 row">
 		    <input type="text" class="form-control col-md-10" placeholder="name" v-model="name">
 		  	<button type="submit" class="btn btn-primary mb-2" @click.prevent="connect">Confirm</button>
 		  </div>
 		</div>
-		<div class="card chat" v-else>
-			<ul>
-				<li v-for="notification in notifications"> 
-					<span>{{ notification.name }} just {{ notification.action }} the conversation</span>
-				</li>
-			</ul>
-		  <h5 class="card-header">My Chat</h5>
-		  <div class="card-body">
-		  	<ul>
-		  		<li v-for="message in messages">
-		  			<span :class="{ 'float-right' : message.sent == 1 }">{{ message.content}}</span>
-		  		</li>
-		  	</ul>
-		  	<ul>
-		  		<li v-for="name in typing"> {{name}} is Typing</li>
-		  	</ul>
-		  	<form @submit.prevent="send">
-			  	<input type="text" v-model="newContent">
-		  	</form>
-		  </div>
+
+		<div class="container" v-else>
+		    <div class="row">
+		        <div class="conversation-wrap col-lg-3">
+		        	<template v-for="user in users_online">
+			            <div class="media conversation">
+			                <div class="media-body">
+			                    <h5 class="media-heading">{{ user }}</h5>
+			                </div>
+			            </div>
+		        	</template>
+		        </div>
+
+		        <div class="message-wrap col-lg-8">
+		            <div class="msg-wrap">
+	            		<template v-for="message in messages">
+			                <div class="media msg ">
+			                    <div class="media-body">
+			                        <small class="pull-right time"><i class="fa fa-clock-o"></i> 12:10am</small>
+			                        <h5 class="media-heading">{{ message.name }}</h5>
+			                        <small class="col-lg-10">{{ message.content }}</small>
+			                    </div>
+		                	</div>
+	            		</template>
+		                <!-- 
+			                <div class="alert alert-info msg-date">
+			                    <strong>Today</strong>
+			                </div>
+	                    !-->
+		            </div>
+
+		            <div class="send-wrap ">
+	                	<textarea class="form-control send-message" rows="3" placeholder="Write a reply..." v-model="newContent"></textarea>
+
+		            </div>
+		            <div class="btn-panel">
+		                <a @click.prevent="send" class=" col-lg-4 text-right btn   send-message-btn pull-right" role="button"><i class="fa fa-plus"></i> Send Message</a>
+		            </div>
+		        </div>
+		    </div>
 		</div>
 	</div>
 
@@ -50,7 +71,8 @@
 				connected: false,
 				notifications: [],
 				typing: [],
-				newContent: ''
+				newContent: '',
+				users_online: []
 			},
 			watch:{
 				newContent(newV, oldV){
@@ -64,19 +86,29 @@
 				}
 			},
 			created(){
-				io.on('connected', (name) => {
+				io.on('connected', (data) => {
+
 					this.notifications.push({
 						name,
 						action: 'joined'
 					})
+
 					this.cleanNotifications()
 					
 				})
 
+				io.on('connected_users', (users) => {
+					this.users_online = users.filter(name => {
+						return name != this.name
+					});
+				})
+
+
 				io.on('send', (newMessage) => {
 					this.messages.push({
 						content : newMessage.content,
-						sent : 0
+						sent : 0,
+						name: newMessage.name
 					})
 				})
 
@@ -95,11 +127,13 @@
 				send(){
 					this.messages.push({
 						content : this.newContent,
-						sent : 1
+						sent : 1,
+						name: this.name
 					})
 
 					io.emit('send',{
 						content: this.newContent,
+						name: this.name
 					})
 
 					this.newContent = ''

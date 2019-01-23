@@ -10,9 +10,20 @@ app.get('/home', function (request, response) {
     response.sendFile(__dirname + "/public/index.html")
 })
 
+let users = [];
+
+
 io.on('connection', function (socket) {
+
+
 	socket.on('connected', (name) => {
+
+		users.push(name)
+
 		socket.broadcast.emit('connected', name)
+
+		io.emit('connected_users', users)
+
 	})
 
 	socket.on('send', (newMessage) => {
@@ -22,7 +33,7 @@ io.on('connection', function (socket) {
 	socket.on('isTyping', (name) => {
 		socket.broadcast.emit('isTyping', name)
 	})
-	
+
 	socket.on('clean_typing', (name) => {
 		socket.broadcast.emit('clean_typing', name)
 	})
