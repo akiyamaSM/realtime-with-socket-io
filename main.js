@@ -18,6 +18,14 @@ io.on('connection', function (socket) {
 	socket.on('send', (newMessage) => {
 		socket.broadcast.emit('send', newMessage)
 	})
+
+	socket.on('isTyping', (name) => {
+		socket.broadcast.emit('isTyping', name)
+	})
+	
+	socket.on('clean_typing', (name) => {
+		socket.broadcast.emit('clean_typing', name)
+	})
 })
 
 server.listen(8080, function () {

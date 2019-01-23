@@ -28,8 +28,11 @@
 		  			<span :class="{ 'float-right' : message.sent == 1 }">{{ message.content}}</span>
 		  		</li>
 		  	</ul>
+		  	<ul>
+		  		<li v-for="name in typing"> {{name}} is Typing</li>
+		  	</ul>
 		  	<form @submit.prevent="send">
-			  	<input type="text" v-model="newContent" @keypress="isTyping">
+			  	<input type="text" v-model="newContent">
 		  	</form>
 		  </div>
 		</div>
@@ -46,7 +49,19 @@
 				name: '',
 				connected: false,
 				notifications: [],
+				typing: [],
 				newContent: ''
+			},
+			watch:{
+				newContent(newV, oldV){
+					if(newV !== ''){
+						io.emit('isTyping', this.name)
+						return;
+					}
+
+					io.emit('clean_typing', this.name)
+
+				}
 			},
 			created(){
 				io.on('connected', (name) => {
@@ -63,6 +78,16 @@
 						content : newMessage.content,
 						sent : 0
 					})
+				})
+
+				io.on('isTyping', (name) => {
+					if(!this.typing.includes(name)){
+						this.typing.push(name)
+					}
+				})
+
+				io.on('clean_typing', (name) => {
+					this.typing = this.typing.filter(item => !(item === name))
 				})
 			},
 			methods: {
