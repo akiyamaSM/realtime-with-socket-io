@@ -37,6 +37,12 @@ io.on('connection', function (socket) {
 	socket.on('clean_typing', (name) => {
 		socket.broadcast.emit('clean_typing', name)
 	})
+
+	socket.on('leave', (name) => {
+		users = users.filter(item => !(item === name))
+
+		socket.broadcast.emit('user_left', name)
+	})
 })
 
 server.listen(8080, function () {
