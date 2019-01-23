@@ -31,11 +31,19 @@
 
 		        <div class="message-wrap col-lg-8">
 		            <div class="msg-wrap">
-	            		<template v-for="message in messages">
+	            		<template v-for="(message, index) in messages">
 			                <div class="media msg ">
 			                    <div class="media-body">
-			                        <small class="pull-right time"><i class="fa fa-clock-o"></i> 12:10am</small>
-			                        <h5 class="media-heading">{{ message.name }}</h5>
+
+			                    	<template v-if="index == 0">
+			                    		<small class="pull-right time"><i class="fa fa-clock-o"></i> 12:10am</small>
+			                        	<h5 class="media-heading">{{ message.name }}</h5>
+			                    	</template>
+
+			                    	<template v-if="index >= 1 && messages[index -1].name !== message.name">
+			                        	<small class="pull-right time"><i class="fa fa-clock-o"></i> 12:10am</small>
+			                        	<h5 class="media-heading">{{ message.name }}</h5>
+			                    	</template>
 			                        <small class="col-lg-10">{{ message.content }}</small>
 			                    </div>
 		                	</div>
