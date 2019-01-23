@@ -167,18 +167,27 @@
 				},
 
 				send(){
-					this.messages.push({
-						content : this.newContent,
-						sent : 1,
-						name: this.name
-					})
+					if(this.newContent.trim().length != 0){
 
-					io.emit('send',{
-						content: this.newContent,
-						name: this.name
-					})
+						this.messages.push({
+							content : this.newContent,
+							sent : 1,
+							name: this.name
+						})
 
-					this.newContent = ''
+						io.emit('send',{
+							content: this.newContent,
+							name: this.name
+						})
+
+						this.newContent = ''
+
+						setTimeout(()=> {
+							document.querySelector('.msg-wrap').scrollTop = document.querySelector('.msg-wrap').scrollHeight
+						}, 500);
+					}
+					
+
 				},
 				cleanNotifications(){
 					setTimeout(() => {
