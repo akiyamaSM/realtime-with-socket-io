@@ -40,6 +40,9 @@
 			                    </div>
 		                	</div>
 	            		</template>
+
+                        <small v-show="typing.length > 0" class="col-lg-10">{{ whoTypes() }} typing</small>
+
 		                <!-- 
 			                <div class="alert alert-info msg-date">
 			                    <strong>Today</strong>
@@ -139,6 +142,13 @@
 				})
 			},
 			methods: {
+				whoTypes(){
+					if(this.typing.length == 1){
+						return this.typing[0] + ' is ';
+					}
+
+					return this.typing.join(', ') + ' are ';
+				},
 
 				send(){
 					this.messages.push({
@@ -153,9 +163,6 @@
 					})
 
 					this.newContent = ''
-				},
-				isTyping(){
-					console.log('Is Typing')
 				},
 				cleanNotifications(){
 					setTimeout(() => {
