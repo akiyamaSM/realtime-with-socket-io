@@ -12,7 +12,7 @@
 
 		<div class="info" v-if="connected === false">
 		  <div class="form-group mx-sm-3 mb-2 row">
-		    <input type="text" class="form-control col-md-10" placeholder="name" v-model="name" :class="{'danger' : name_used}">
+		    <input type="text" class="form-control col-md-10" required placeholder="name" v-model="name" :class="{'danger' : name_used}">
 		  	<button type="submit" class="btn btn-primary mb-2" @click.prevent="connect">Confirm</button>
 		  	<span v-show="name_used">Username already used</span>
 		  </div>
@@ -187,7 +187,7 @@
 				},
 				connect(){
 
-					if(!this.users_online.includes(this.name)){
+					if(this.name !== '' && !this.users_online.includes(this.name)){
 						
 						this.connected = true
 					
