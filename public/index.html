@@ -12,8 +12,9 @@
 
 		<div class="info" v-if="connected === false">
 		  <div class="form-group mx-sm-3 mb-2 row">
-		    <input type="text" class="form-control col-md-10" placeholder="name" v-model="name">
+		    <input type="text" class="form-control col-md-10" placeholder="name" v-model="name" :class="{'danger' : name_used}">
 		  	<button type="submit" class="btn btn-primary mb-2" @click.prevent="connect">Confirm</button>
+		  	<span v-show="name_used">Username already used</span>
 		  </div>
 		</div>
 
@@ -49,7 +50,7 @@
 		                	</div>
 	            		</template>
 
-                        <small v-show="typing.length > 0" class="col-lg-10">{{ whoTypes() }} typing</small>
+                        <small v-show="typing.length > 0" class="col-lg-10">{{ whoTypes() }} typing ...</small>
 
 		                <!-- 
 			                <div class="alert alert-info msg-date">
@@ -83,7 +84,8 @@
 				notifications: [],
 				typing: [],
 				newContent: '',
-				users_online: []
+				users_online: [],
+				name_used: false,
 			},
 			watch:{
 				newContent(newV, oldV){
@@ -148,6 +150,12 @@
 
 					this.cleanNotifications()
 				})
+
+				io.on('connect_response', (response) => {
+
+					this.name_used = !response
+					this.connected = response
+				})
 			},
 			methods: {
 				whoTypes(){
@@ -178,9 +186,14 @@
 					}, 3000)
 				},
 				connect(){
-					this.connected = true
 
-					io.emit('connected',this.name)
+					if(!this.users_online.includes(this.name)){
+						
+						this.connected = true
+					
+						io.emit('connected',this.name)
+					}
+
 				}
 			}
 		})

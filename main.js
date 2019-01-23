@@ -18,11 +18,22 @@ io.on('connection', function (socket) {
 
 	socket.on('connected', (name) => {
 
-		users.push(name)
+		if(users.includes(name)){
+			socket.emit('connect_response', false)
+			
+			return;
+		}else{
 
-		socket.broadcast.emit('connected', name)
+			users.push(name)
 
-		io.emit('connected_users', users)
+			socket.emit('connect_response', true)
+
+			socket.broadcast.emit('connected', name)
+
+		}
+			io.emit('connected_users', users)
+
+		
 
 	})
 
@@ -42,6 +53,7 @@ io.on('connection', function (socket) {
 		users = users.filter(item => !(item === name))
 
 		socket.broadcast.emit('user_left', name)
+		socket.broadcast.emit('clean_typing', name)
 	})
 })
 
