@@ -9,6 +9,7 @@
 </head>
 <body>
 	<div id="app">
+		<div id="sound"></div>
 		<div class="info" v-if="connected === false">
 		  <div class="form-group mx-sm-3 mb-2 row">
 		    <input type="text" class="form-control col-md-10" required placeholder="name" v-model="name" :class="{'danger' : name_used}">
@@ -159,6 +160,7 @@
 						name: newMessage.name,
 						secret: newMessage.secret
 					})
+					this.playSound('/sounds/plucky')
 				})
 
 				io.on('isTyping', (name) => {
@@ -252,7 +254,6 @@
 							document.querySelector('.msg-wrap').scrollTop = document.querySelector('.msg-wrap').scrollHeight
 						}, 500);
 					}
-					
 
 				},
 				cleanNotifications(){
@@ -269,7 +270,13 @@
 						io.emit('connected',this.name)
 					}
 
-				}
+				},
+				playSound(filename){
+			        var mp3Source = '<source src="' + filename + '.mp3" type="audio/mpeg">';
+			        var oggSource = '<source src="' + filename + '.ogg" type="audio/ogg">';
+			        var embedSource = '<embed hidden="true" autostart="true" loop="false" src="' + filename +'.mp3">';
+			        document.getElementById("sound").innerHTML='<audio autoplay="autoplay">' + mp3Source + oggSource + embedSource + '</audio>';
+			      }
 			}
 		})
 
