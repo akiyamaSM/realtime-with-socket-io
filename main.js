@@ -11,7 +11,7 @@ app.get('/home', function (request, response) {
 })
 
 let users = [];
-
+let sockets = {};
 
 io.on('connection', function (socket) {
 
@@ -20,11 +20,13 @@ io.on('connection', function (socket) {
 
 		if(users.includes(name)){
 			socket.emit('connect_response', false)
-			
+
 			return;
+
 		}else{
 
 			users.push(name)
+			sockets[name] = socket;
 
 			socket.emit('connect_response', true)
 
@@ -34,11 +36,21 @@ io.on('connection', function (socket) {
 			io.emit('connected_users', users)
 
 		
+	})
 
+	socket.on('send_whisper', (newMessage) => {
+		sockets[newMessage.onlyFor].emit('send', newMessage);
 	})
 
 	socket.on('send', (newMessage) => {
-		socket.broadcast.emit('send', newMessage)
+		if(newMessage.content.indexOf('/w') !== -1){
+			if(newMessage.content.indexOf('Houssain') !== -1){
+				sockets[newMessage.onlyFor].emit('send', newMessage);
+				return;
+			}
+		}else{
+			socket.broadcast.emit('send', newMessage)
+		}
 	})
 
 	socket.on('isTyping', (name) => {
@@ -54,6 +66,7 @@ io.on('connection', function (socket) {
 
 		socket.broadcast.emit('user_left', name)
 		socket.broadcast.emit('clean_typing', name)
+		delete sockets[name];
 	})
 })
 

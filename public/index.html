@@ -9,7 +9,6 @@
 </head>
 <body>
 	<div id="app">
-
 		<div class="info" v-if="connected === false">
 		  <div class="form-group mx-sm-3 mb-2 row">
 		    <input type="text" class="form-control col-md-10" required placeholder="name" v-model="name" :class="{'danger' : name_used}">
@@ -19,12 +18,33 @@
 		</div>
 
 		<div class="container" v-else>
+			<div class="modal show-modal" v-if="wantWhisper" id="secret-modal" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel" aria-hidden="true">
+			  <div class="modal-dialog" role="document">
+			    <div class="modal-content">
+			      <div class="modal-header">
+			        <h5 class="modal-title" id="exampleModalLabel">Write some secret message to {{ onlyFor }}</h5>
+			        <button type="button" class="close" data-dismiss="modal" aria-label="Close" @click.prevent="cancelWhisper">
+			          <span aria-hidden="true">&times;</span>
+			        </button>
+			      </div>
+			      <div class="modal-body">
+			        <textarea class="form-control send-message" rows="3" placeholder="Write a reply..." v-model="wihsper_content"></textarea>
+			      </div>
+			      <div class="modal-footer">
+			        <button type="button" class="btn btn-secondary" data-dismiss="modal" @click.prevent="cancelWhisper">Close</button>
+			        <button type="button" class="btn btn-primary" @click.prevent="doWihsper">Send</button>
+			      </div>
+			    </div>
+			  </div>
+		    </div>
 		    <div class="row">
 		        <div class="conversation-wrap col-lg-3">
 		        	<template v-for="user in users_online">
 			            <div class="media conversation">
 			                <div class="media-body">
-			                    <h5 class="media-heading">{{ user }}</h5>
+			                	<a @click.prevent="WhisperTo(user)">
+			                    <img class="whisper-img" src="/imgs/whisper.png"><h5 class="media-heading name-list">{{ user }} </h5>
+			                    </a>
 			                </div>
 			            </div>
 		        	</template>
@@ -35,17 +55,24 @@
 	            		<template v-for="(message, index) in messages">
 			                <div class="media msg ">
 			                    <div class="media-body">
-
-			                    	<template v-if="index == 0">
-			                    		<small class="pull-right time"><i class="fa fa-clock-o"></i> 12:10am</small>
-			                        	<h5 class="media-heading">{{ message.name }}</h5>
+			                    	<template 
+			                    		v-if="index == 0  || (index > 0 && messages[index -1].secret !== message.secret) || ( index > 0 && messages[index -1].sent !== message.sent)"
+			                    	>
+			                    		<small class="pull-right time newLine"><i class="fa fa-clock-o"></i> 12:10am</small>
+			                        	<h5 class="media-heading" :class="{'span' : message.secret }">{{ message.name }}</h5>
+			                        	<template v-if="message.secret">
+			                        		<img  class="whisper-img span" src="/imgs/whisper.png">
+			                        		<h5 class="media-heading span" v-if="message.sent">
+			                        			{{ message.onlyFor }}
+			                        		</h5>
+			                        		<h5 class="media-heading span" v-else>
+			                        			{{ name }}
+			                        		</h5>
+			                        	</template>
 			                    	</template>
-
-			                    	<template v-if="index >= 1 && messages[index -1].name !== message.name">
-			                        	<small class="pull-right time"><i class="fa fa-clock-o"></i> 12:10am</small>
-			                        	<h5 class="media-heading">{{ message.name }}</h5>
-			                    	</template>
-			                        <small class="col-lg-10">{{ message.content }}</small>
+			                        <small :class="{'secret-message' : message.secret }" class="col-lg-10 newLine">
+			                        	{{ message.content }}
+			                    	</small>
 			                    </div>
 		                	</div>
 	            		</template>
@@ -86,6 +113,9 @@
 				newContent: '',
 				users_online: [],
 				name_used: false,
+				wantWhisper: false,
+				onlyFor: '',
+				wihsper_content: '',
 			},
 			watch:{
 				newContent(newV, oldV){
@@ -126,7 +156,8 @@
 					this.messages.push({
 						content : newMessage.content,
 						sent : 0,
-						name: newMessage.name
+						name: newMessage.name,
+						secret: newMessage.secret
 					})
 				})
 
@@ -158,6 +189,39 @@
 				})
 			},
 			methods: {
+				doWihsper(){
+					if(this.wantWhisper && this.onlyFor !== '' && this.wihsper_content !== ''){
+
+						this.messages.push({
+							content : this.wihsper_content,
+							sent : 1,
+							name: this.name,
+							secret: true,
+							onlyFor: this.onlyFor
+						})
+
+
+						io.emit('send_whisper', {
+								content : this.wihsper_content,
+								name: this.name,
+								secret: true,
+								onlyFor: this.onlyFor
+						})
+
+						this.wantWhisper = false,
+						this.onlyFor = ''
+						this.wihsper_content = ''
+					}
+				},
+				cancelWhisper(){
+					this.wantWhisper = false,
+					this.onlyFor = ''
+					this.wihsper_content = ''
+				},
+				WhisperTo(name){
+					this.wantWhisper = true,
+					this.onlyFor = name
+				},
 				whoTypes(){
 					if(this.typing.length == 1){
 						return this.typing[0] + ' is ';
@@ -172,12 +236,14 @@
 						this.messages.push({
 							content : this.newContent,
 							sent : 1,
-							name: this.name
+							name: this.name,
+							secret: false
 						})
 
 						io.emit('send',{
 							content: this.newContent,
-							name: this.name
+							name: this.name,
+							secret: false
 						})
 
 						this.newContent = ''

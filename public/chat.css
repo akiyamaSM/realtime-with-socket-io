@@ -204,3 +204,31 @@
     ::-webkit-scrollbar-thumb:window-inactive {
         background: #ddd; 
     }
+
+.show-modal{
+    display: block;
+}
+
+.whisper-img{
+    display: inline;
+    width: 30px;
+    vertical-align: sub;
+}
+
+
+.name-list{
+    display: inline-block;
+    text-transform: uppercase;
+}
+
+.secret-message{
+    color: gray;
+}
+
+.span{
+    display: inline;
+}
+
+.newLine{
+    display: block;
+}
